@@ -3,8 +3,10 @@
 namespace Pialsoft\LaravelPushManager\Tests\Unit;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Pialsoft\LaravelPushManager\Client\FcmHttpV1Client;
@@ -16,8 +18,8 @@ class FcmHttpV1ClientTest extends TestCase
     private function makeClient(
         MockHandler $mock
     ): FcmHttpV1Client {
-        $credentials = new class('unused.json')
-            extends GoogleCredentialsProvider {
+        $credentials = new class('unused.json') extends GoogleCredentialsProvider
+        {
             public function getAccessToken(): string
             {
                 return 'test-access-token';
@@ -77,8 +79,7 @@ class FcmHttpV1ClientTest extends TestCase
                         'details' => [
                             [
                                 'errorCode' => 'UNREGISTERED',
-                                '@type' =>
-                                    'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+                                '@type' => 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
                             ],
                         ],
                     ],
@@ -154,6 +155,107 @@ class FcmHttpV1ClientTest extends TestCase
         } catch (FcmRequestException $exception) {
             $this->assertSame(400, $exception->httpStatus());
             $this->assertFalse($exception->isRetryable());
+        }
+    }
+
+    public function test_network_connection_failure_is_propagated(): void
+    {
+        $mock = new MockHandler([
+            new ConnectException(
+                'Connection timed out',
+                new Request(
+                    'POST',
+                    'https://fcm.googleapis.com'
+                )
+            ),
+        ]);
+
+        $client = $this->makeClient($mock);
+
+        $this->expectException(ConnectException::class);
+
+        $client->send([
+            'token' => 'fake-device-token',
+        ]);
+    }
+
+    public function test_invalid_json_success_response_throws_exception(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                '{invalid-json'
+            ),
+        ]);
+
+        $client = $this->makeClient($mock);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Firebase returned an invalid JSON response.'
+        );
+
+        $client->send([
+            'token' => 'fake-device-token',
+        ]);
+    }
+
+    public function test_unauthorized_response_is_not_retryable(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                401,
+                ['Content-Type' => 'application/json'],
+                json_encode([
+                    'error' => [
+                        'code' => 401,
+                        'message' => 'Request had invalid authentication credentials.',
+                        'status' => 'UNAUTHENTICATED',
+                    ],
+                ])
+            ),
+        ]);
+
+        $client = $this->makeClient($mock);
+
+        try {
+            $client->send(['token' => 'fake-device-token']);
+            $this->fail('Expected FcmRequestException was not thrown.');
+        } catch (FcmRequestException $exception) {
+            $this->assertSame(401, $exception->httpStatus());
+            $this->assertSame('UNAUTHENTICATED', $exception->fcmErrorCode());
+            $this->assertFalse($exception->isRetryable());
+            $this->assertFalse($exception->isInvalidToken());
+        }
+    }
+
+    public function test_forbidden_response_is_not_retryable(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                403,
+                ['Content-Type' => 'application/json'],
+                json_encode([
+                    'error' => [
+                        'code' => 403,
+                        'message' => 'Permission denied.',
+                        'status' => 'PERMISSION_DENIED',
+                    ],
+                ])
+            ),
+        ]);
+
+        $client = $this->makeClient($mock);
+
+        try {
+            $client->send(['token' => 'fake-device-token']);
+            $this->fail('Expected FcmRequestException was not thrown.');
+        } catch (FcmRequestException $exception) {
+            $this->assertSame(403, $exception->httpStatus());
+            $this->assertSame('PERMISSION_DENIED', $exception->fcmErrorCode());
+            $this->assertFalse($exception->isRetryable());
+            $this->assertFalse($exception->isInvalidToken());
         }
     }
 }

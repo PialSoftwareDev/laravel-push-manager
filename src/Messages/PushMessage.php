@@ -4,6 +4,7 @@ namespace Pialsoft\LaravelPushManager\Messages;
 
 use InvalidArgumentException;
 use Pialsoft\LaravelPushManager\Client\FcmHttpV1Client;
+use Pialsoft\LaravelPushManager\Jobs\SendPushNotificationJob;
 
 class PushMessage
 {
@@ -63,6 +64,37 @@ class PushMessage
 
     public function send(): array
     {
+        return $this->client->send($this->buildMessage());
+    }
+
+    public function queue(): void
+    {
+        $message = $this->buildMessage();
+
+        if (! config('push-manager.queue.enabled', true)) {
+            $this->client->send($message);
+
+            return;
+        }
+
+        $job = new SendPushNotificationJob($message);
+
+        $connection = config('push-manager.queue.connection');
+        $queue = config('push-manager.queue.name', 'push-notifications');
+
+        if (is_string($connection) && trim($connection) !== '') {
+            $job->onConnection($connection);
+        }
+
+        if (is_string($queue) && trim($queue) !== '') {
+            $job->onQueue($queue);
+        }
+
+        dispatch($job);
+    }
+
+    private function buildMessage(): array
+    {
         $message = [
             'token' => $this->token,
         ];
@@ -75,6 +107,6 @@ class PushMessage
             $message['data'] = $this->data;
         }
 
-        return $this->client->send($message);
+        return $message;
     }
 }

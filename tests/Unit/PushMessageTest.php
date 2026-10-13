@@ -29,8 +29,8 @@ class PushMessageTest extends TestCase
         $stack = HandlerStack::create($mock);
         $stack->push(Middleware::history($history));
 
-        $credentials = new class('unused.json')
-            extends GoogleCredentialsProvider {
+        $credentials = new class('unused.json') extends GoogleCredentialsProvider
+        {
             public function getAccessToken(): string
             {
                 return 'test-access-token';
@@ -79,8 +79,8 @@ class PushMessageTest extends TestCase
 
     public function test_empty_device_token_is_rejected(): void
     {
-        $credentials = new class('unused.json')
-            extends GoogleCredentialsProvider {
+        $credentials = new class('unused.json') extends GoogleCredentialsProvider
+        {
             public function getAccessToken(): string
             {
                 return 'test-access-token';
@@ -90,7 +90,7 @@ class PushMessageTest extends TestCase
         $client = new FcmHttpV1Client(
             'test-project',
             $credentials,
-            new Client()
+            new Client
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -100,8 +100,8 @@ class PushMessageTest extends TestCase
 
     public function test_non_scalar_data_value_is_rejected(): void
     {
-        $credentials = new class('unused.json')
-            extends GoogleCredentialsProvider {
+        $credentials = new class('unused.json') extends GoogleCredentialsProvider
+        {
             public function getAccessToken(): string
             {
                 return 'test-access-token';
@@ -111,7 +111,7 @@ class PushMessageTest extends TestCase
         $client = new FcmHttpV1Client(
             'test-project',
             $credentials,
-            new Client()
+            new Client
         );
 
         $this->expectException(InvalidArgumentException::class);

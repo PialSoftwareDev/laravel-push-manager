@@ -1,37 +1,42 @@
+
 {
     "name": "pialsoft/laravel-push-manager",
     "description": "A developer-friendly Firebase Cloud Messaging package for Laravel",
     "type": "library",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Pialsoft\\LaravelPushManager\\": "src/"
-        }
-    },"autoload-dev": {
-    "psr-4": {
-        "Pialsoft\\LaravelPushManager\\Tests\\": "tests/"
-       }
-  },"authors": [
+    "authors": [
         {
             "name": "Pial Mahmud",
             "email": "smartsoftwarepial@gmail.com"
         }
     ],
-    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Pialsoft\\LaravelPushManager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Pialsoft\\LaravelPushManager\\Tests\\": "tests/"
+        }
+    },
     "require": {
+        "php": "^8.2",
         "google/auth": "^1.0",
         "guzzlehttp/guzzle": "^7.0",
         "illuminate/support": "^11.0 || ^12.0 || ^13.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
+        "laravel/pint": "^1.32"
+    },
+    "minimum-stability": "stable",
     "extra": {
         "laravel": {
             "providers": [
                 "Pialsoft\\LaravelPushManager\\PushManagerServiceProvider"
             ]
         }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^11.0",
-        "orchestra/testbench": "^9.0 || ^10.0 || ^11.0"
     }
 }

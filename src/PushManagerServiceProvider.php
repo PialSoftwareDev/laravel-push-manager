@@ -12,7 +12,7 @@ class PushManagerServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/push-manager.php',
+            __DIR__.'/../config/push-manager.php',
             'push-manager'
         );
 
@@ -64,8 +64,7 @@ class PushManagerServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/push-manager.php'
-                => config_path('push-manager.php'),
+            __DIR__.'/../config/push-manager.php' => config_path('push-manager.php'),
         ], 'push-manager-config');
     }
 }

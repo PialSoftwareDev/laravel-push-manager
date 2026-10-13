@@ -8,7 +8,6 @@ use Pialsoft\LaravelPushManager\Messages\PushMessage;
 
 /**
  * @method static PushMessage toToken(string $token)
- * @method static array send(array $message)
  *
  * @see FcmHttpV1Client
  */

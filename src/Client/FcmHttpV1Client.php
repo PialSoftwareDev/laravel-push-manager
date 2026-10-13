@@ -8,7 +8,6 @@ use InvalidArgumentException;
 use Pialsoft\LaravelPushManager\Exceptions\FcmRequestException;
 use Pialsoft\LaravelPushManager\Messages\PushMessage;
 use RuntimeException;
-use Throwable;
 
 class FcmHttpV1Client
 {
@@ -32,7 +31,7 @@ class FcmHttpV1Client
             );
         }
 
-        $this->http = $http ?? new Client();
+        $this->http = $http ?? new Client;
     }
 
     public function toToken(string $token): PushMessage
@@ -50,8 +49,7 @@ class FcmHttpV1Client
             ),
             [
                 'headers' => [
-                    'Authorization' =>
-                        'Bearer ' . $this->credentials->getAccessToken(),
+                    'Authorization' => 'Bearer '.$this->credentials->getAccessToken(),
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [

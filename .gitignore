@@ -1,2 +1,13 @@
 /vendor/
 /.phpunit.cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+/firebase_credential.json
+/service-account.json
+/storage/app/firebase/*.json
+
+# Local runtime files
+/storage/*.key
