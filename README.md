@@ -77,6 +77,8 @@ Replace `your-firebase-project-id` with the Firebase project ID.
 
 `FCM_CREDENTIALS_FILE` is resolved relative to the Laravel application base path unless an absolute path is supplied.
 
+The package requires both values to be present before it can send Firebase messages. If either value is empty, missing, or the credentials file cannot be read, the package throws a clear runtime exception when the Firebase client is resolved.
+
 Keep credentials out of source control. Do not put the service-account JSON or private key directly into `.env`.
 
 After changing configuration in a deployed application, refresh Laravel's configuration cache as appropriate:
@@ -84,6 +86,10 @@ After changing configuration in a deployed application, refresh Laravel's config
 ```bash
 php artisan config:clear
 ```
+
+### Compatibility notes
+
+This package targets Laravel 11, 12, and 13. Compatibility is verified against the supported Laravel versions in this repository's Composer constraints and the package's test matrix.
 
 ## Send a notification directly
 

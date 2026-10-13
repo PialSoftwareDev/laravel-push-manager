@@ -19,37 +19,17 @@ class PushManagerServiceProvider extends ServiceProvider
         $this->app->singleton(
             GoogleCredentialsProvider::class,
             function ($app): GoogleCredentialsProvider {
-                $credentialsFile = $app['config']->get(
-                    'push-manager.credentials.file'
+                return new GoogleCredentialsProvider(
+                    $this->resolveCredentialsFile($app)
                 );
-
-                if (! is_string($credentialsFile) || trim($credentialsFile) === '') {
-                    throw new RuntimeException(
-                        'Set the Firebase credentials file in push-manager.credentials.file.'
-                    );
-                }
-
-                if (! str_starts_with($credentialsFile, DIRECTORY_SEPARATOR)) {
-                    $credentialsFile = base_path($credentialsFile);
-                }
-
-                return new GoogleCredentialsProvider($credentialsFile);
             }
         );
 
         $this->app->singleton(
             FcmHttpV1Client::class,
             function ($app): FcmHttpV1Client {
-                $projectId = $app['config']->get('push-manager.project_id');
-
-                if (! is_string($projectId) || trim($projectId) === '') {
-                    throw new RuntimeException(
-                        'Set the Firebase project ID in push-manager.project_id.'
-                    );
-                }
-
                 return new FcmHttpV1Client(
-                    $projectId,
+                    $this->resolveProjectId($app),
                     $app->make(GoogleCredentialsProvider::class),
                     null,
                     (int) $app['config']->get(
@@ -59,6 +39,44 @@ class PushManagerServiceProvider extends ServiceProvider
                 );
             }
         );
+    }
+
+    private function resolveCredentialsFile($app): string
+    {
+        $credentialsFile = $app['config']->get(
+            'push-manager.credentials.file'
+        );
+
+        if (! is_string($credentialsFile) || trim($credentialsFile) === '') {
+            throw new RuntimeException(
+                'Set the Firebase credentials file in push-manager.credentials.file.'
+            );
+        }
+
+        if (! $this->isAbsolutePath($credentialsFile)) {
+            $credentialsFile = base_path($credentialsFile);
+        }
+
+        return $credentialsFile;
+    }
+
+    private function resolveProjectId($app): string
+    {
+        $projectId = $app['config']->get('push-manager.project_id');
+
+        if (! is_string($projectId) || trim($projectId) === '') {
+            throw new RuntimeException(
+                'Set the Firebase project ID in push-manager.project_id.'
+            );
+        }
+
+        return $projectId;
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, DIRECTORY_SEPARATOR)
+            || preg_match('/^[A-Za-z]:[\\\\\/]/', $path) === 1;
     }
 
     public function boot(): void
